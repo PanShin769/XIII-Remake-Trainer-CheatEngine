@@ -20,6 +20,10 @@ A lightweight, free, and open-source **Cheat Engine Trainer (`.exe`) & Cheat Tab
 
 *(Note: Hotkeys can be customized anytime by opening the included `.ct` file in Cheat Engine.)*
 
+## 🎥 Gameplay & Trainer Showcase
+
+https://youtu.be/QfJhHEO-SiA
+
 ---
 
 ## 📥 Download & How to Use
