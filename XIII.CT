@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable UsesMono="1" CheatEngineTableVersion="52">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>1</ID>
+      <Description>"AMMO script"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+aobscanmodule(INJECT_AMMO,GameAssembly.dll,89 41 18 48 8B BB A8 00 00 00 48 85 FF 74 1E 48 8B 83 B8 00 00 00 48 85 C0 0F 84)
+alloc(newmem,$1000,INJECT_AMMO)
+
+label(code)
+label(skip_write)
+label(return)
+
+newmem:
+  cmp eax,[rcx+18]
+  jl skip_write
+
+code:
+  mov [rcx+18],eax
+
+skip_write:
+  mov rdi,[rbx+000000A8]
+  jmp return
+
+INJECT_AMMO:
+  jmp newmem
+  nop 5
+return:
+registersymbol(INJECT_AMMO)
+
+[DISABLE]
+INJECT_AMMO:
+  db 89 41 18 48 8B BB A8 00 00 00
+
+unregistersymbol(INJECT_AMMO)
+dealloc(newmem)
+
+</AssemblerScript>
+      <Hotkeys>
+        <Hotkey>
+          <Action>Toggle Activation</Action>
+          <Keys>
+            <Key>98</Key>
+          </Keys>
+          <ID>0</ID>
+          <ActivateSound TTS="EN">{MRDescription} Activated</ActivateSound>
+          <DeactivateSound TTS="EN">{MRDescription} Deactivated</DeactivateSound>
+        </Hotkey>
+      </Hotkeys>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>2</ID>
+      <Description>"Health script"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+alloc(newmem, 2048, GameAssembly.dll+1686700)
+alloc(orig_bytes, 16)
+alloc(full_armor, 4)
+alloc(scale_one, 4)
+registersymbol(orig_bytes)
+
+orig_bytes:
+  readmem(GameAssembly.dll+1686700, 16)
+
+full_armor:
+  dd (float)100.0
+
+scale_one:
+  dd (float)1.0
+
+newmem:
+  test rcx, rcx
+  je short exit_func
+
+  // 1. 生命未满时，调用 ResetHealth(true) 补满并刷新 HUD 血条
+  movss xmm0, [rcx+48]
+  ucomiss xmm0, [rcx+4C]
+  je short check_armor
+
+  push rcx
+  push rdx
+  push r8
+  push r9
+  sub rsp, 28
+  mov dl, 1
+  xor r8d, r8d
+  call GameAssembly.dll+1685940
+  add rsp, 28
+  pop r9
+  pop r8
+  pop rdx
+  pop rcx
+
+check_armor:
+  // 2. 先解除 maxArmor(+0x50) 与 armorPickupScaleFactor(+0x54) 限制，再调用 AddArmor(100.0f)
+  movss xmm0, [full_armor]
+  movss [rcx+50], xmm0        // maxArmor = 100.0f
+  movss xmm1, [scale_one]
+  movss [rcx+54], xmm1        // armorPickupScaleFactor = 1.0f
+
+  ucomiss xmm0, [rcx+58]
+  jbe short fill_breath
+
+  push rcx
+  push rdx
+  push r8
+  push r9
+  sub rsp, 28
+  movss xmm1, [full_armor]    // float armorAmount = 100.0f
+  xor r8d, r8d                // const MethodInfo* method = nullptr
+  call GameAssembly.dll+1685B10
+  add rsp, 28
+  pop r9
+  pop r8
+  pop rdx
+  pop rcx
+
+fill_breath:
+  // 3. 氧气值直接补满
+  movss xmm0, [rcx+C4]
+  movss [rcx+C8], xmm0
+
+exit_func:
+  xor eax, eax
+  ret
+
+GameAssembly.dll+1686700:
+  jmp newmem
+
+[DISABLE]
+GameAssembly.dll+1686700:
+  readmem(orig_bytes, 16)
+
+unregistersymbol(orig_bytes)
+dealloc(orig_bytes)
+dealloc(full_armor)
+dealloc(scale_one)
+dealloc(newmem)
+</AssemblerScript>
+      <Hotkeys>
+        <Hotkey>
+          <Action>Toggle Activation</Action>
+          <Keys>
+            <Key>97</Key>
+          </Keys>
+          <ID>0</ID>
+          <ActivateSound TTS="EN">{MRDescription} Activated</ActivateSound>
+          <DeactivateSound TTS="EN">{MRDescription} Deactivated</DeactivateSound>
+        </Hotkey>
+      </Hotkeys>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols/>
+</CheatTable>
